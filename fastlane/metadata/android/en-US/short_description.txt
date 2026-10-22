@@ -1,0 +1,1 @@
+Search an LDAP address book from the Contacts and Phone apps

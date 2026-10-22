@@ -1,0 +1,15 @@
+Makes a corporate LDAP address book searchable from the system Contacts and
+Phone apps, with optional caller ID for numbers found in the directory.
+
+The app is a contacts directory provider: searches typed in Contacts or in the
+dialer are sent live to your LDAP server, one LDAPS query each, and nothing is
+copied or cached on the phone.
+
+You set it up with your own directory account, as you would add an LDAP address
+book to a mail client: server, search base and bind DN (typed by hand, or
+scanned from a configuration QR code published by whoever runs the directory),
+then your login and password. The password is encrypted with a key held in the
+Android Keystore.
+
+Only LDAPS (port 636) is supported, and the server certificate must be trusted
+by the Android system.

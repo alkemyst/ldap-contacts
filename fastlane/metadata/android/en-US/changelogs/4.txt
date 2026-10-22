@@ -1,0 +1,1 @@
+* Store listing: description, icon and screenshots.
