@@ -1,0 +1,44 @@
+# Builds the APKs on every push; download them from the job's artifacts.
+#   app-debug.apk             signed with the committed debug key, installable directly
+#   app-release-unsigned.apk  what F-Droid would build (it signs with its own key)
+
+image: eclipse-temurin:21-jdk
+
+variables:
+  ANDROID_HOME: "$CI_PROJECT_DIR/.android-sdk"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle-home"
+  CMDLINE_TOOLS: "https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip"
+  DEBIAN_FRONTEND: noninteractive
+
+cache:
+  key: android-35
+  paths:
+    - .android-sdk/
+    - .gradle-home/caches/
+    - .gradle-home/wrapper/
+
+build:
+  stage: build
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip curl > /dev/null
+    - |
+      if [ ! -d "$ANDROID_HOME/platforms/android-35" ]; then
+        mkdir -p "$ANDROID_HOME/cmdline-tools"
+        curl -sfL -o /tmp/clt.zip "$CMDLINE_TOOLS"
+        unzip -q -o /tmp/clt.zip -d /tmp/clt
+        rm -rf "$ANDROID_HOME/cmdline-tools/latest"
+        mv /tmp/clt/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
+        # The runner uses pipefail: "yes" dies of SIGPIPE (141) once sdkmanager stops reading.
+        (yes || true) | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0" > /dev/null
+      fi
+    - echo "sdk.dir=$ANDROID_HOME" > local.properties
+  script:
+    - ./gradlew --no-daemon --console=plain assembleDebug assembleRelease lintDebug
+  artifacts:
+    name: "ldap-contacts-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - app/build/outputs/apk/debug/app-debug.apk
+      - app/build/outputs/apk/release/app-release-unsigned.apk
+      - app/build/reports/lint-results-debug.html
+    expire_in: 30 days

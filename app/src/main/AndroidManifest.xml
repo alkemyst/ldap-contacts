@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Only used to call Directory.notifyDirectoryChange() and to check the
+         directory registration; the app never reads or writes contacts. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <!-- Only to scan the configuration QR code on first run. The scanner asks for it
+         at that moment, so it can be granted just for that once, or never granted at
+         all if the settings are typed by hand. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@android:drawable/sym_contact_card"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@android:style/Theme.DeviceDefault.DayNight">
+
+        <activity
+            android:name=".SetupActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- First run: which directory to search. Not exported: SetupActivity opens it. -->
+        <activity
+            android:name=".ConfigActivity"
+            android:exported="false"
+            android:label="@string/app_name" />
+
+        <!-- Reads the configuration QR code. Not exported: only ConfigActivity opens it. -->
+        <activity
+            android:name=".ScanActivity"
+            android:exported="false"
+            android:label="@string/app_name" />
+
+        <!-- Dummy component: toggling it sends PACKAGE_CHANGED, which makes
+             ContactsProvider rescan this package's directory (no permission needed). -->
+        <activity-alias
+            android:name=".RescanToggle"
+            android:enabled="false"
+            android:exported="false"
+            android:targetActivity=".SetupActivity" />
+
+        <!-- Account "LDAP Contacts": anchors the directory. The password is NOT kept
+             here (AccountManager stores account passwords in clear text) but encrypted
+             by Credentials with an Android Keystore key. -->
+        <service
+            android:name=".AuthenticatorService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+
+        <!-- Remote contact directory: queried live by Contacts/Dialer, nothing stored.
+             readPermission: only apps that already hold READ_CONTACTS can query it. -->
+        <provider
+            android:name=".DirectoryProvider"
+            android:authorities="org.ldapcontacts.directory"
+            android:exported="true"
+            android:readPermission="android.permission.READ_CONTACTS">
+            <meta-data
+                android:name="android.content.ContactDirectory"
+                android:value="true" />
+        </provider>
+
+        <!-- Optional caller ID: active only if the app is granted the call screening role. -->
+        <service
+            android:name=".CallerIdService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SCREENING_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>
