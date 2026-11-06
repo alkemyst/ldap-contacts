@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Release: HTTPS only, system CAs only. -->
+<!-- Release: HTTPS only. System CAs, plus Sectigo Public Server Authentication Root
+     R46: it is in the Android trust store only from Android 15, so older devices fail
+     on servers that chain to it with "Trust anchor for certification path not found". -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/sectigo_public_server_r46" />
+        </trust-anchors>
+    </base-config>
 </network-security-config>

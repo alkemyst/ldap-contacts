@@ -1,0 +1,1 @@
+Fix "Trust anchor for certification path not found" on Android 14 and older.

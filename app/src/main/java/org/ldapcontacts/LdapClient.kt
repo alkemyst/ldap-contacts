@@ -17,9 +17,9 @@ import javax.net.ssl.SSLContext
  * way a mail client is configured against a corporate directory. Server, base DN and
  * bind DN pattern come from [Config]; the attribute names here do not.
  *
- * The certificate is validated against the system trust store and the host name is
- * checked, so the server needs a publicly trusted certificate; no CA is shipped with
- * the app.
+ * The certificate is validated and the host name is checked, so the server needs a
+ * publicly trusted certificate. The trust anchors come from network_security_config:
+ * the system store plus one public root that Android only has from version 15.
  *
  * One connection is kept and reused across queries. A refused password throws
  * [Credentials.Rejected] and stops every further attempt until the user types it
